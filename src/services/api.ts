@@ -1,3 +1,4 @@
+import { getStoredToken } from '@/utils/authStorage';
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import type { ApiErrorBody } from '@/types';
 
@@ -76,3 +77,18 @@ export async function del<T>(url: string): Promise<T> {
   const res = await api.delete(url);
   return res.data?.data as T;
 }
+
+
+// ═══════════════════════════════════════════════════════════
+// Inject JWT from localStorage into every request
+// (Enables cross-domain auth without cookies.)
+// ═══════════════════════════════════════════════════════════
+api.interceptors.request.use((config) => {
+  const token = getStoredToken();
+  if (token) {
+    config.headers = config.headers ?? {};
+    (config.headers as any).Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
