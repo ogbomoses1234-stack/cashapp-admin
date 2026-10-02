@@ -31,7 +31,7 @@ export async function uploadImage(params: {
   purpose?: AdminUploadPurpose;
   onProgress?: (pct: number) => void;
 }): Promise<UploadImageResult> {
-  const { file, purpose = 'product', onProgress } = params;
+const { file, purpose = 'avatar', onProgress } = params;
 
   const MAX = 5 * 1024 * 1024;
   const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
@@ -42,7 +42,7 @@ export async function uploadImage(params: {
 
   let presign: PresignResponse;
   try {
-    presign = await post<PresignResponse>('/api/public/uploads/presign', {
+    presign = await post<PresignResponse>('/api/admin/uploads/presign', {
       purpose,
       mimeType: file.type,
       sizeBytes: file.size,
@@ -50,7 +50,7 @@ export async function uploadImage(params: {
   } catch (e) {
     const err = e as { status?: number };
     if (purpose === 'product' && err.status === 400) {
-      presign = await post<PresignResponse>('/api/public/uploads/presign', {
+      presign = await post<PresignResponse>('/api/admin/uploads/presign', {
         purpose: 'avatar',
         mimeType: file.type,
         sizeBytes: file.size,
@@ -70,7 +70,7 @@ export async function uploadImage(params: {
   });
 
   await post<{ objectKey: string; committed: true }>(
-    '/api/public/uploads/commit',
+    '/api/admin/uploads/commit',
     { objectKey: presign.objectKey }
   );
 
