@@ -13,17 +13,17 @@ const SECTIONS = [
       { to: '/dashboard',    icon: '📊', label: 'Dashboard' },
       { to: '/withdrawals',  icon: '💸', label: 'Withdrawals' },
       { to: '/orders',       icon: '🧾', label: 'Orders' },
+      { to: '/packages',     icon: '🛍️', label: 'Special Orders' },
     ],
   },
-{
-  label: 'Catalog',
-  items: [
-    { to: '/products',     icon: '🏷️', label: 'Products' },
-    { to: '/banners',      icon: '🖼️', label: 'Banners' },
-    { to: '/qr-generator', icon: '🔲', label: 'QR Generator' },
-  ],
-},
-  
+  {
+    label: 'Catalog',
+    items: [
+      { to: '/products',     icon: '🏷️', label: 'Products' },
+      { to: '/banners',      icon: '🖼️', label: 'Banners' },
+      { to: '/qr-generator', icon: '🔲', label: 'QR Generator' },
+    ],
+  },
   {
     label: 'People',
     items: [
@@ -117,7 +117,11 @@ export function Sidebar() {
 
       {/* User footer */}
       <div className="border-t border-surface-border p-3">
-        <div className={`flex items-center gap-2.5 rounded-lg bg-white/[.03] p-2 ${collapsed ? 'justify-center' : ''}`}>
+        <div
+          className={`flex items-center gap-2.5 rounded-lg bg-white/[.03] p-2 ${
+            collapsed ? 'justify-center' : ''
+          }`}
+        >
           <div className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg bg-gradient-to-br from-violet-400 to-violet-600 text-[10px] font-black text-white">
             {getInitials(admin?.fullName ?? admin?.email)}
           </div>

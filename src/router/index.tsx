@@ -18,6 +18,8 @@ import ChatsPage from '@/pages/chats/ChatsPage';
 import DisputesPage from '@/pages/disputes/DisputesPage';
 import LogsPage from '@/pages/logs/LogsPage';
 import SettingsPage from '@/pages/settings/SettingsPage';
+import PackagesPage from '@/pages/packages/PackagesPage';
+import PackageDetailPage from '@/pages/packages/PackageDetailPage';
 import RouteErrorPage from '@/pages/RouteErrorPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
@@ -44,7 +46,9 @@ export const router = createBrowserRouter([
               { path: '/products', element: <ProductsPage /> },
               { path: '/qr-generator', element: <QrGeneratorPage /> },
               { path: '/orders', element: <OrdersPage /> },
-                { path: '/serial-tracker', element: <SerialTrackerPage /> },
+              { path: '/serial-tracker', element: <SerialTrackerPage /> },
+              { path: '/packages', element: <PackagesPage /> },
+              { path: '/packages/:id', element: <PackageDetailPage /> },
               { path: '/banners', element: <BannersPage /> },
               { path: '/staff', element: <StaffPage /> },
               { path: '/users', element: <UsersPage /> },

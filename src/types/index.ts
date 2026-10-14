@@ -235,7 +235,6 @@ export interface Paginated<T> {
   totalPages: number;
 }
 
-
 /* ═══════════════════════════════════════════════════════════
    SERIAL TRACKER — audit trail for QR scans
 ═══════════════════════════════════════════════════════════ */
@@ -257,25 +256,15 @@ export interface SerialTrackerRow {
   serialNumber: string;
   productId: string | null;
   productTitle: string;
-
   status: SerialTrackerStatus;
-
-  /* Dispatch side (which staff took it out for sale) */
   dispatchedBy: TrackerUser | null;
   dispatchedAt: string | null;
-
-  /* Redemption side (which customer claimed it) */
   redeemedBy: TrackerUser | null;
   redeemedAt: string | null;
-
-  /* Metrics */
   timeToRedeemSeconds: number | null;
-
-  /* Signature & meta */
   qrSignature: string | null;
   createdAt: string;
 }
-
 
 /* ═══════════════════════════════════════════════════════════
    WITHDRAWAL DETAIL — full cashback trail
@@ -287,7 +276,6 @@ export interface WithdrawalSerialLink {
   creditedAt: string;
   creditedAmount: string;
   serialFound: boolean;
-
   dispatchedBy?: TrackerUser | null;
   dispatchedAt?: string | null;
   redeemedBy?: TrackerUser | null;
@@ -303,4 +291,75 @@ export interface WithdrawalDetail extends AdminWithdrawal {
     withoutStaffDispatch: number;
     totalCredited: string;
   };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PACKAGES — Special Orders (Nigeria-only personal shopping)
+═══════════════════════════════════════════════════════════ */
+export type PackageStatus =
+  | 'draft'
+  | 'submitted'
+  | 'quoted'
+  | 'approved'
+  | 'in_progress'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled';
+
+export type PackageEditStatus = 'pending' | 'approved' | 'denied';
+
+export interface AdminPackageItem {
+  id: string;
+  name: string;
+  details: string | null;
+  quantity: number;
+  estimatedPrice: string | null;
+  imageUrl: string | null;
+  imageObjectKey: string | null;
+  createdAt: string;
+}
+
+export interface AdminPackageEditRequest {
+  id: string;
+  requestId: string;
+  reason: string;
+  status: PackageEditStatus;
+  adminNote: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface AdminPackageMessage {
+  id: string;
+  requestId: string;
+  senderId: string;
+  senderRole: 'customer' | 'admin' | 'staff';
+  body: string;
+  attachmentObjectKey: string | null;
+  createdAt: string;
+}
+
+export interface AdminPackage {
+  id: string;
+  reference: string;
+  title: string;
+  status: PackageStatus;
+  isEditable: boolean;
+  notes: string | null;
+  /** Stores the Nigerian state (kept as `country` for backend compat) */
+  country: string;
+  city: string;
+  deliveryAddress: string;
+  contactPhone: string;
+  quotedTotal: string | null;
+  currency: string;
+  items: AdminPackageItem[];
+  pendingEditRequest: AdminPackageEditRequest | null;
+  allEditRequests?: AdminPackageEditRequest[];
+  customer?: CustomerSummary;
+  messages?: AdminPackageMessage[];
+  messageCount?: number;
+  lastMessageAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

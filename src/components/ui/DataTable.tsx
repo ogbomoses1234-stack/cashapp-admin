@@ -18,12 +18,14 @@ interface Props<T> {
   emptyTitle?: string;
   emptyHint?: string;
   emptyIcon?: ReactNode;
+  /** Optional — fires when a row is clicked. Adds a pointer cursor + hover. */
+  onRowClick?: (row: T) => void;
 }
 
 /**
- * Render one cell defensively.
- * If the column's render fn throws (e.g. reading `.toLocaleString()` on undefined),
- * we swallow it and show a placeholder instead of crashing the whole page.
+ * Render one cell defensively. If the column's render fn throws
+ * (e.g. reading `.toLocaleString()` on undefined), we swallow it
+ * and show a placeholder instead of crashing the whole page.
  */
 function SafeCell<T>({ col, row }: { col: Column<T>; row: T }) {
   try {
@@ -41,7 +43,11 @@ function SafeCell<T>({ col, row }: { col: Column<T>; row: T }) {
   }
 }
 
-function SafeKey<T extends object>(row: T, keyField: keyof T, fallbackIdx: number): string {
+function SafeKey<T extends object>(
+  row: T,
+  keyField: keyof T,
+  fallbackIdx: number
+): string {
   try {
     const v = row[keyField];
     if (v === undefined || v === null) return `__idx_${fallbackIdx}`;
@@ -59,6 +65,7 @@ export function DataTable<T extends object>({
   emptyTitle = 'No records found',
   emptyHint,
   emptyIcon,
+  onRowClick,
 }: Props<T>) {
   if (loading) {
     return (
@@ -99,7 +106,10 @@ export function DataTable<T extends object>({
             {rows.map((row, rowIdx) => (
               <tr
                 key={SafeKey(row, keyField, rowIdx)}
-                className="border-b border-surface-border/60 last:border-b-0 transition hover:bg-white/[.02]"
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                className={`border-b border-surface-border/60 last:border-b-0 transition hover:bg-white/[.02] ${
+                  onRowClick ? 'cursor-pointer' : ''
+                }`}
               >
                 {columns.map((c) => (
                   <td
