@@ -9,18 +9,10 @@ interface Props {
   onClose: () => void;
   onSave: (amount: string) => Promise<void> | void;
   saving?: boolean;
-  /** Live total of estimated prices, shown as a hint */
   suggestedTotal?: number;
 }
 
-export function QuoteModal({
-  open,
-  initial,
-  onClose,
-  onSave,
-  saving,
-  suggestedTotal,
-}: Props) {
+export function QuoteModal({ open, initial, onClose, onSave, saving, suggestedTotal }: Props) {
   const [amount, setAmount] = useState('');
 
   useEffect(() => {
@@ -29,11 +21,6 @@ export function QuoteModal({
 
   const parsed = parseFloat(amount);
   const isValid = isFinite(parsed) && parsed > 0;
-
-  const handleSave = () => {
-    if (!isValid) return;
-    onSave(amount.trim());
-  };
 
   return (
     <Modal
@@ -44,12 +31,10 @@ export function QuoteModal({
       maxWidth="max-w-md"
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
           <Button
             variant="primary"
-            onClick={handleSave}
+            onClick={() => isValid && onSave(amount.trim())}
             disabled={!isValid}
             loading={saving}
           >
@@ -64,9 +49,7 @@ export function QuoteModal({
             Quoted total (₦)
           </span>
           <div className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] font-black text-ink-400">
-              ₦
-            </span>
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] font-black text-ink-400">₦</span>
             <input
               inputMode="decimal"
               value={amount}

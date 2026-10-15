@@ -12,7 +12,6 @@ import { normalizeCustomer } from './order.service';
 
 type Loose = Record<string, unknown>;
 
-/* ─── Coercion helpers ──────────────────────────────────── */
 function str(v: unknown, fallback = ''): string {
   if (typeof v === 'string') return v;
   if (typeof v === 'number') return String(v);
@@ -33,7 +32,6 @@ function bool(v: unknown, fallback = false): boolean {
   return fallback;
 }
 
-/* ─── Normalizers ───────────────────────────────────────── */
 function normalizeItem(input: unknown, index = 0): AdminPackageItem {
   const r = (input ?? {}) as Loose;
   return {
@@ -41,13 +39,9 @@ function normalizeItem(input: unknown, index = 0): AdminPackageItem {
     name: str(r.name ?? r.title ?? 'Item'),
     details: (r.details ?? r.notes ?? null) as string | null,
     quantity: num(r.quantity, 1),
-    estimatedPrice: (r.estimatedPrice ??
-      r.estimated_price ??
-      null) as string | null,
+    estimatedPrice: (r.estimatedPrice ?? r.estimated_price ?? null) as string | null,
     imageUrl: (r.imageUrl ?? r.image_url ?? null) as string | null,
-    imageObjectKey: (r.imageObjectKey ??
-      r.image_object_key ??
-      null) as string | null,
+    imageObjectKey: (r.imageObjectKey ?? r.image_object_key ?? null) as string | null,
     createdAt: str(r.createdAt ?? r.created_at ?? new Date().toISOString()),
   };
 }
@@ -58,13 +52,9 @@ function normalizeMessage(input: unknown, index = 0): AdminPackageMessage {
     id: str(r.id ?? r._id ?? `msg-${index}`),
     requestId: str(r.requestId ?? r.request_id ?? ''),
     senderId: str(r.senderId ?? r.sender_id ?? ''),
-    senderRole: ((r.senderRole ??
-      r.sender_role ??
-      'customer') as AdminPackageMessage['senderRole']),
+    senderRole: ((r.senderRole ?? r.sender_role ?? 'customer') as AdminPackageMessage['senderRole']),
     body: str(r.body ?? r.message ?? r.text ?? ''),
-    attachmentObjectKey: (r.attachmentObjectKey ??
-      r.attachment_object_key ??
-      null) as string | null,
+    attachmentObjectKey: (r.attachmentObjectKey ?? r.attachment_object_key ?? null) as string | null,
     createdAt: str(r.createdAt ?? r.created_at ?? new Date().toISOString()),
   };
 }
@@ -100,12 +90,8 @@ function normalizePackage(input: unknown): AdminPackage {
     ? (rawAllEdits as Loose[]).map(normalizeEditRequest)
     : undefined;
 
-  const rawPendingEdit = (r.pendingEditRequest ??
-    r.pending_edit_request ??
-    null) as Loose | null;
-  const pendingEditRequest = rawPendingEdit
-    ? normalizeEditRequest(rawPendingEdit)
-    : null;
+  const rawPendingEdit = (r.pendingEditRequest ?? r.pending_edit_request ?? null) as Loose | null;
+  const pendingEditRequest = rawPendingEdit ? normalizeEditRequest(rawPendingEdit) : null;
 
   const customerSource = r.customer ?? r.user ?? r.buyer;
   const customer = customerSource ? normalizeCustomer(customerSource) : undefined;
@@ -135,34 +121,19 @@ function normalizePackage(input: unknown): AdminPackage {
   };
 }
 
-/* ═══════════════════════════════════════════════════════════
-   Public API
-═══════════════════════════════════════════════════════════ */
-
 export async function listPackages(
   params: { status?: string; search?: string; page?: number; perPage?: number } = {}
 ): Promise<Paginated<AdminPackage>> {
-  const data = await get<unknown>(
-    '/api/admin/packages',
-    params as Record<string, unknown>
-  );
+  const data = await get<unknown>('/api/admin/packages', params as Record<string, unknown>);
 
   if (Array.isArray(data)) {
     const items = (data as Loose[]).map(normalizePackage);
-    return {
-      items,
-      page: 1,
-      perPage: items.length,
-      total: items.length,
-      totalPages: 1,
-    };
+    return { items, page: 1, perPage: items.length, total: items.length, totalPages: 1 };
   }
 
   const obj = (data ?? {}) as Loose;
   const rawList = (obj.items ?? obj.packages ?? obj.data ?? []) as unknown;
-  const items = Array.isArray(rawList)
-    ? (rawList as Loose[]).map(normalizePackage)
-    : [];
+  const items = Array.isArray(rawList) ? (rawList as Loose[]).map(normalizePackage) : [];
 
   return {
     items,
@@ -185,10 +156,7 @@ export async function replyToPackage(
   body: string,
   attachmentKey?: string
 ): Promise<AdminPackageMessage> {
-  const data = await post<unknown>(`/api/admin/packages/${id}/reply`, {
-    body,
-    attachmentKey,
-  });
+  const data = await post<unknown>(`/api/admin/packages/${id}/reply`, { body, attachmentKey });
   const obj = (data ?? {}) as Loose;
   const raw = (obj.message ?? obj) as Loose;
   return normalizeMessage(raw);
@@ -199,10 +167,7 @@ export async function setPackageStatus(
   status: Exclude<PackageStatus, 'draft'>,
   reason?: string
 ): Promise<AdminPackage> {
-  const data = await patch<unknown>(`/api/admin/packages/${id}/status`, {
-    status,
-    reason,
-  });
+  const data = await patch<unknown>(`/api/admin/packages/${id}/status`, { status, reason });
   const obj = (data ?? {}) as Loose;
   const raw = (obj.package ?? obj) as Loose;
   return normalizePackage(raw);
@@ -213,10 +178,7 @@ export async function setPackageQuote(
   quotedTotal: string,
   currency = 'NGN'
 ): Promise<AdminPackage> {
-  const data = await patch<unknown>(`/api/admin/packages/${id}/quote`, {
-    quotedTotal,
-    currency,
-  });
+  const data = await patch<unknown>(`/api/admin/packages/${id}/quote`, { quotedTotal, currency });
   const obj = (data ?? {}) as Loose;
   const raw = (obj.package ?? obj) as Loose;
   return normalizePackage(raw);
