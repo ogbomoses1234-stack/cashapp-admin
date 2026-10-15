@@ -1,33 +1,27 @@
-/**
- * Access-token storage for cross-domain deployments.
- *
- * On same-domain deployments (production with vickkyaku.com), the backend
- * sets an httpOnly cookie and this file is unused.
- *
- * On cross-domain deployments (sslip.io testing), we store the JWT in
- * localStorage and send it via Authorization: Bearer <token>.
- *
- * The backend accepts BOTH — cookie OR Authorization header.
- */
-
-const TOKEN_KEY = 'qrcb_access_token';
+const ACCESS_KEY = 'qrcb_access_token';
+const REFRESH_KEY = 'qrcb_refresh_token';
 
 export function getStoredToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
+  try { return localStorage.getItem(ACCESS_KEY); } catch { return null; }
 }
-
 export function setStoredToken(token: string): void {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch {}
+  try { localStorage.setItem(ACCESS_KEY, token); } catch {}
+}
+export function clearStoredToken(): void {
+  try { localStorage.removeItem(ACCESS_KEY); } catch {}
 }
 
-export function clearStoredToken(): void {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch {}
+export function getStoredRefreshToken(): string | null {
+  try { return localStorage.getItem(REFRESH_KEY); } catch { return null; }
+}
+export function setStoredRefreshToken(token: string): void {
+  try { localStorage.setItem(REFRESH_KEY, token); } catch {}
+}
+export function clearStoredRefreshToken(): void {
+  try { localStorage.removeItem(REFRESH_KEY); } catch {}
+}
+
+export function clearAllStoredTokens(): void {
+  clearStoredToken();
+  clearStoredRefreshToken();
 }
