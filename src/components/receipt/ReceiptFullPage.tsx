@@ -1,4 +1,4 @@
-import { QRCodeCanvas } from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { formatNaira } from '@/utils/format';
 
 /* ═══════════════════════════════════════════════════════════
@@ -18,15 +18,14 @@ export interface ReceiptFullPageProps {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   Color tokens — match the reference design
+   Color tokens
 ═══════════════════════════════════════════════════════════ */
 const T = {
   bg: '#F5EFE0',
-  brand: '#8B7355',          // gold
-  brandLight: '#A89376',
+  brand: '#8B7355',
   text: '#1A1A1A',
   muted: '#6B5B47',
-  border: '#C9B896',         // gold for break lines
+  border: '#C9B896',
   borderLight: '#DCCDB0',
 };
 
@@ -66,7 +65,7 @@ export function ReceiptFullPage({
         width: '210mm',
         height: '297mm',
         boxSizing: 'border-box',
-        padding: '14mm 14mm 12mm',
+        padding: '10mm 8mm 8mm',
         overflow: 'hidden',
 
         /* ─── Visuals ─────────────────────────────────────── */
@@ -81,13 +80,13 @@ export function ReceiptFullPage({
         pageBreakInside: 'avoid',
         breakInside: 'avoid',
 
-        /* ─── Flex layout so content flows and QR grows ──── */
+        /* ─── Flex column so QR section can grow ─────────── */
         display: 'flex',
         flexDirection: 'column',
       }}
     >
       {/* ═══════════════════════════════════════════════════
-          BACKGROUND WATERMARK (V logo, very subtle)
+          BACKGROUND WATERMARK
       ═══════════════════════════════════════════════════ */}
       <div
         aria-hidden
@@ -98,21 +97,21 @@ export function ReceiptFullPage({
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
-          opacity: 0.055,
+          opacity: 0.05,
         }}
       >
         <img
           src={logoSrc}
           alt=""
           style={{
-            width: '55%',
+            width: '50%',
             filter: 'sepia(1) hue-rotate(-15deg) saturate(0.6)',
           }}
         />
       </div>
 
       {/* ═══════════════════════════════════════════════════
-          HEADER — Logo + Brand + Receipt line
+          HEADER — logo + brand + receipt line
       ═══════════════════════════════════════════════════ */}
       <div
         style={{
@@ -121,13 +120,14 @@ export function ReceiptFullPage({
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
+          flexShrink: 0,
         }}
       >
         <img
           src={logoSrc}
           alt="Vickkyaku"
           style={{
-            height: '14mm',
+            height: '11mm',
             width: 'auto',
             objectFit: 'contain',
             filter: 'sepia(0.9) saturate(1.6) hue-rotate(-15deg) brightness(0.7)',
@@ -136,9 +136,9 @@ export function ReceiptFullPage({
 
         <h1
           style={{
-            marginTop: '3mm',
+            marginTop: '2.5mm',
             marginBottom: 0,
-            fontSize: '24pt',
+            fontSize: '20pt',
             fontWeight: 900,
             letterSpacing: '0.03em',
             color: T.brand,
@@ -151,12 +151,11 @@ export function ReceiptFullPage({
 
         <p
           style={{
-            marginTop: '4mm',
+            marginTop: '3mm',
             marginBottom: 0,
-            fontSize: '11pt',
+            fontSize: '10pt',
             color: T.text,
             fontWeight: 500,
-            letterSpacing: '0.01em',
           }}
         >
           Receipt No: <b style={{ fontWeight: 800 }}>#{receiptNo}</b>
@@ -171,8 +170,9 @@ export function ReceiptFullPage({
       <div
         style={{
           position: 'relative',
-          margin: '7mm 0',
+          margin: '5mm 0',
           borderTop: `1.5px solid ${T.border}`,
+          flexShrink: 0,
         }}
       />
 
@@ -183,18 +183,17 @@ export function ReceiptFullPage({
         style={{
           position: 'relative',
           textAlign: 'center',
-          marginBottom: '2mm',
+          flexShrink: 0,
         }}
       >
         <h2
           style={{
             margin: 0,
-            fontSize: '28pt',
+            fontSize: '22pt',
             fontWeight: 800,
             color: T.brand,
             fontFamily: '"Georgia", "Times New Roman", serif',
             lineHeight: 1.1,
-            letterSpacing: '0.005em',
           }}
         >
           {productTitle}
@@ -202,9 +201,9 @@ export function ReceiptFullPage({
 
         <p
           style={{
-            marginTop: '5mm',
+            marginTop: '4mm',
             marginBottom: 0,
-            fontSize: '26pt',
+            fontSize: '22pt',
             fontWeight: 900,
             color: T.text,
             letterSpacing: '-0.01em',
@@ -217,9 +216,9 @@ export function ReceiptFullPage({
         {qty > 1 && (
           <p
             style={{
-              marginTop: '3mm',
+              marginTop: '2mm',
               marginBottom: 0,
-              fontSize: '11pt',
+              fontSize: '10pt',
               color: T.muted,
               fontWeight: 500,
             }}
@@ -230,69 +229,83 @@ export function ReceiptFullPage({
       </div>
 
       {/* ═══════════════════════════════════════════════════
-          QR + CASHBACK CALLOUT — grows to fill remaining space
+          QR CODE — takes 90% of the receipt width
+          This section grows to fill remaining vertical space.
       ═══════════════════════════════════════════════════ */}
       <div
         style={{
           position: 'relative',
           flex: 1,
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '8mm',
-          paddingTop: '6mm',
-          paddingBottom: '2mm',
+          padding: '4mm 0',
+          minHeight: 0,
         }}
       >
-        {/* ─── QR CODE — bigger ──────────────────────────── */}
         <div
           style={{
-            display: 'inline-block',
-            padding: '5mm',
+            width: '90%',
+            maxWidth: '90%',
+            aspectRatio: '1 / 1',
+            maxHeight: '100%',
             background: '#FFFFFF',
-            border: `1px solid ${T.borderLight}`,
-            borderRadius: '2mm',
+            padding: '3mm',
+            borderRadius: '3mm',
+            boxShadow: '0 1mm 3mm rgba(0,0,0,0.06)',
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <QRCodeCanvas
+          <QRCodeSVG
             value={qrData}
-            size={320}
             level="M"
             bgColor="#FFFFFF"
             fgColor="#1A1A1A"
             marginSize={0}
+            style={{ width: '100%', height: '100%', display: 'block' }}
           />
         </div>
+      </div>
 
-        {/* ─── Cashback callout ──────────────────────────── */}
-        <div style={{ textAlign: 'center' }}>
-          <p
-            style={{
-              margin: 0,
-              fontSize: '17pt',
-              fontWeight: 900,
-              letterSpacing: '0.04em',
-              color: T.text,
-              textTransform: 'uppercase',
-            }}
-          >
-            Earn ₦{Number(cashbackAmount).toFixed(2)} Cashback
-          </p>
-          <p
-            style={{
-              marginTop: '3mm',
-              marginBottom: 0,
-              fontSize: '11pt',
-              fontWeight: 600,
-              letterSpacing: '0.16em',
-              color: T.muted,
-              textTransform: 'uppercase',
-            }}
-          >
-            Scan the code · Claim instantly
-          </p>
-        </div>
+      {/* ═══════════════════════════════════════════════════
+          CASHBACK CALLOUT
+      ═══════════════════════════════════════════════════ */}
+      <div
+        style={{
+          position: 'relative',
+          textAlign: 'center',
+          paddingTop: '2mm',
+          flexShrink: 0,
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: '15pt',
+            fontWeight: 900,
+            letterSpacing: '0.04em',
+            color: T.text,
+            textTransform: 'uppercase',
+          }}
+        >
+          Earn ₦{Number(cashbackAmount).toFixed(2)} Cashback
+        </p>
+        <p
+          style={{
+            marginTop: '2mm',
+            marginBottom: 0,
+            fontSize: '10pt',
+            fontWeight: 600,
+            letterSpacing: '0.16em',
+            color: T.muted,
+            textTransform: 'uppercase',
+          }}
+        >
+          Scan the code · Claim instantly
+        </p>
       </div>
 
       {/* ═══════════════════════════════════════════════════
@@ -301,19 +314,20 @@ export function ReceiptFullPage({
       <div
         style={{
           position: 'relative',
-          margin: '6mm 0 4mm',
+          margin: '4mm 0',
           borderTop: `1.5px solid ${T.border}`,
+          flexShrink: 0,
         }}
       />
 
       {/* ═══════════════════════════════════════════════════
-          FOOTER — small brand line
+          FOOTER
       ═══════════════════════════════════════════════════ */}
       <div
         style={{
           position: 'relative',
           textAlign: 'center',
-          paddingBottom: '6mm',
+          flexShrink: 0,
         }}
       >
         <p
@@ -337,9 +351,9 @@ export function ReceiptFullPage({
         aria-hidden
         style={{
           position: 'absolute',
-          right: '8mm',
-          bottom: '6mm',
-          width: '18mm',
+          right: '6mm',
+          bottom: '4mm',
+          width: '14mm',
           opacity: 0.1,
           pointerEvents: 'none',
         }}
