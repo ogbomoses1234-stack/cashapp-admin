@@ -9,6 +9,7 @@ import {
   listProducts,
   deleteProduct,
   toggleFeatured,
+  updateProduct,
 } from '@/services/product.service';
 import type { AdminProduct } from '@/types';
 import { formatNaira } from '@/utils/format';
@@ -24,6 +25,7 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState<AdminProduct | null>(null);
   const [deleting, setDeleting] = useState<AdminProduct | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [busyActionId, setBusyActionId] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(search, 350);
 
@@ -68,27 +70,95 @@ export default function ProductsPage() {
     });
   };
 
-  /* ─── Delete ──────────────────────────────────────────── */
+  /* ─── Deactivate / Reactivate from row action ────────── */
+  const handleToggleActive = async (p: AdminProduct) => {
+    if (busyActionId) return;
+    const next = !p.isActive;
+    setBusyActionId(p.id);
+
+    /* Optimistic */
+    setRows((prev) =>
+      prev.map((r) => (r.id === p.id ? { ...r, isActive: next } : r))
+    );
+
+    try {
+      const updated = await updateProduct(p.id, { isActive: next });
+      setRows((prev) => prev.map((r) => (r.id === p.id ? updated : r)));
+      toast.success(next ? 'Product reactivated' : 'Product deactivated');
+    } catch (e) {
+      /* Roll back */
+      setRows((prev) =>
+        prev.map((r) => (r.id === p.id ? { ...r, isActive: p.isActive } : r))
+      );
+      toast.error((e as ApiClientError).message);
+    } finally {
+      setBusyActionId(null);
+    }
+  };
+
+  /* ─── Delete / Deactivate logic ───────────────────────── */
   const handleDelete = async () => {
     if (!deleting) return;
+
+    /* If the product has serials, the confirm dialog switches to
+       "deactivate instead" mode — the primary action becomes deactivate. */
+    if (deleting.serialCount > 0) {
+      try {
+        const updated = await updateProduct(deleting.id, { isActive: false });
+        setRows((prev) =>
+          prev.map((r) => (r.id === deleting.id ? updated : r))
+        );
+        toast.success('Product deactivated — hidden from customers');
+      } catch (e) {
+        toast.error((e as ApiClientError).message);
+      } finally {
+        setDeleting(null);
+      }
+      return;
+    }
+
+    /* No serials — attempt actual delete */
     try {
       await deleteProduct(deleting.id);
       setRows((prev) => prev.filter((r) => r.id !== deleting.id));
       toast.success('Product deleted');
-    } catch (e) {
-      toast.error((e as ApiClientError).message);
-    } finally {
       setDeleting(null);
+    } catch (e) {
+      const err = e as ApiClientError;
+
+      /* Backend blocked with a specific reason — surface it clearly
+         and offer deactivation as the fallback in the same dialog. */
+      if (
+        err.code === 'PRODUCT_HAS_ORDERS' ||
+        err.code === 'PRODUCT_HAS_SERIALS'
+      ) {
+        toast.error(err.message);
+        /* Force the dialog into "deactivate" mode on next open */
+        setDeleting({ ...deleting, serialCount: Math.max(1, deleting.serialCount) });
+        /* Automatically deactivate since the user clearly wants it gone */
+        try {
+          const updated = await updateProduct(deleting.id, { isActive: false });
+          setRows((prev) =>
+            prev.map((r) => (r.id === deleting.id ? updated : r))
+          );
+          toast.success('Product deactivated instead');
+        } catch (inner) {
+          toast.error((inner as ApiClientError).message);
+        }
+        setDeleting(null);
+      } else {
+        toast.error(err.message);
+        setDeleting(null);
+      }
     }
   };
 
-  /* ─── Feature toggle ──────────────────────────────────── */
+  /* ─── Featured toggle ─────────────────────────────────── */
   const handleToggleFeatured = async (p: AdminProduct) => {
     if (togglingId) return;
     const next = !p.isFeatured;
     setTogglingId(p.id);
 
-    // Optimistic update — flip immediately, roll back if the call fails
     setRows((prev) =>
       prev.map((r) => (r.id === p.id ? { ...r, isFeatured: next } : r))
     );
@@ -100,7 +170,6 @@ export default function ProductsPage() {
         next ? 'Added to home page featured' : 'Removed from featured'
       );
     } catch (e) {
-      // Roll back
       setRows((prev) =>
         prev.map((r) => (r.id === p.id ? { ...r, isFeatured: p.isFeatured } : r))
       );
@@ -112,9 +181,6 @@ export default function ProductsPage() {
 
   /* ─── Columns ─────────────────────────────────────────── */
   const columns: Column<AdminProduct>[] = [
-    /* ═══════════════════════════════════════════════════
-       FEATURED STAR — admin-controlled home page visibility
-    ═══════════════════════════════════════════════════ */
     {
       key: 'featured',
       header: '★',
@@ -154,9 +220,6 @@ export default function ProductsPage() {
       },
     },
 
-    /* ═══════════════════════════════════════════════════
-       PRODUCT (thumbnail + title + slug)
-    ═══════════════════════════════════════════════════ */
     {
       key: 'product',
       header: 'Product',
@@ -193,9 +256,6 @@ export default function ProductsPage() {
       ),
     },
 
-    /* ═══════════════════════════════════════════════════
-       CATEGORY
-    ═══════════════════════════════════════════════════ */
     {
       key: 'category',
       header: 'Category',
@@ -206,9 +266,6 @@ export default function ProductsPage() {
       ),
     },
 
-    /* ═══════════════════════════════════════════════════
-       PRICE
-    ═══════════════════════════════════════════════════ */
     {
       key: 'price',
       header: 'Price',
@@ -220,9 +277,6 @@ export default function ProductsPage() {
       ),
     },
 
-    /* ═══════════════════════════════════════════════════
-       STOCK
-    ═══════════════════════════════════════════════════ */
     {
       key: 'stock',
       header: 'Stock',
@@ -241,9 +295,6 @@ export default function ProductsPage() {
       },
     },
 
-    /* ═══════════════════════════════════════════════════
-       SERIALS
-    ═══════════════════════════════════════════════════ */
     {
       key: 'serials',
       header: 'Serials',
@@ -255,9 +306,6 @@ export default function ProductsPage() {
       ),
     },
 
-    /* ═══════════════════════════════════════════════════
-       STATUS
-    ═══════════════════════════════════════════════════ */
     {
       key: 'status',
       header: 'Status',
@@ -268,26 +316,48 @@ export default function ProductsPage() {
       ),
     },
 
-    /* ═══════════════════════════════════════════════════
-       ACTIONS
-    ═══════════════════════════════════════════════════ */
+    /* ─── Actions ─────────────────────────────────────── */
     {
       key: 'actions',
       header: '',
       align: 'right',
-      render: (p) => (
-        <div
-          className="flex items-center justify-end gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
-            ✎ Edit
-          </Button>
-          <Button variant="danger" size="sm" onClick={() => setDeleting(p)}>
-            Delete
-          </Button>
-        </div>
-      ),
+      render: (p) => {
+        const busy = busyActionId === p.id;
+        return (
+          <div
+            className="flex items-center justify-end gap-1.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Button variant="outline" size="sm" onClick={() => openEdit(p)}>
+              ✎ Edit
+            </Button>
+
+            {p.isActive ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleToggleActive(p)}
+                disabled={busy}
+              >
+                {busy ? '…' : 'Deactivate'}
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleToggleActive(p)}
+                disabled={busy}
+              >
+                {busy ? '…' : 'Reactivate'}
+              </Button>
+            )}
+
+            <Button variant="danger" size="sm" onClick={() => setDeleting(p)}>
+              Delete
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -344,34 +414,50 @@ export default function ProductsPage() {
         onSaved={handleSaved}
       />
 
-      {/* ─── Delete confirmation ──────────────────────── */}
+      {/* ─── Delete / Deactivate confirmation ─────────── */}
       <ConfirmDialog
         open={!!deleting}
         onClose={() => setDeleting(null)}
-        title="Delete product"
+        title={
+          deleting && deleting.serialCount > 0
+            ? 'Deactivate instead of delete?'
+            : 'Delete product'
+        }
         danger
-        confirmLabel="Delete permanently"
+        confirmLabel={
+          deleting && deleting.serialCount > 0
+            ? 'Deactivate product'
+            : 'Delete permanently'
+        }
+        cancelLabel="Cancel"
         message={
           deleting ? (
-            <div className="space-y-2">
-              <p>
-                You're about to permanently delete{' '}
-                <b className="text-white">{deleting.title}</b>. This cannot be
-                undone.
+            <div className="space-y-3">
+              <p className="text-[12.5px] font-medium leading-relaxed text-ink-300">
+                You're about to{' '}
+                {deleting.serialCount > 0 ? 'deactivate' : 'permanently delete'}{' '}
+                <b className="text-white">{deleting.title}</b>.
               </p>
-              <p className="text-[12px] text-ink-500">
-                {deleting.serialCount > 0 ? (
-                  <>
-                    ⚠ This product has{' '}
-                    <b className="text-amber-300">
-                      {deleting.serialCount} serials
-                    </b>{' '}
-                    associated with it. The backend may reject the deletion.
-                  </>
-                ) : (
-                  'No serials are associated with this product.'
-                )}
-              </p>
+
+              {deleting.serialCount > 0 ? (
+                <div className="rounded-lg bg-amber-500/10 p-3 ring-1 ring-inset ring-amber-400/20">
+                  <p className="text-[11.5px] font-bold text-amber-200">
+                    ⚠ {deleting.serialCount} serial
+                    {deleting.serialCount === 1 ? '' : 's'} attached
+                  </p>
+                  <p className="mt-1 text-[11px] font-medium leading-relaxed text-amber-100/80">
+                    Products with serials can't be hard-deleted — the serials would
+                    orphan the audit trail. Deactivating hides it from customers
+                    while preserving all history.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[11.5px] font-medium leading-relaxed text-ink-500">
+                  This action is permanent. If this product appears in any customer
+                  orders, the deletion will be blocked and we'll offer to deactivate
+                  it instead.
+                </p>
+              )}
             </div>
           ) : null
         }
