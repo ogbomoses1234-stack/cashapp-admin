@@ -22,10 +22,11 @@ export interface ReceiptFullPageProps {
 ═══════════════════════════════════════════════════════════ */
 const T = {
   bg: '#F5EFE0',
-  brand: '#8B7355',
+  brand: '#8B7355',          // gold
+  brandLight: '#A89376',
   text: '#1A1A1A',
   muted: '#6B5B47',
-  border: '#C9B896',
+  border: '#C9B896',         // gold for break lines
   borderLight: '#DCCDB0',
 };
 
@@ -65,7 +66,7 @@ export function ReceiptFullPage({
         width: '210mm',
         height: '297mm',
         boxSizing: 'border-box',
-        padding: '16mm 14mm',
+        padding: '14mm 14mm 12mm',
         overflow: 'hidden',
 
         /* ─── Visuals ─────────────────────────────────────── */
@@ -80,7 +81,7 @@ export function ReceiptFullPage({
         pageBreakInside: 'avoid',
         breakInside: 'avoid',
 
-        /* ─── Flex layout so content is centered ─────────── */
+        /* ─── Flex layout so content flows and QR grows ──── */
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -97,21 +98,21 @@ export function ReceiptFullPage({
           alignItems: 'center',
           justifyContent: 'center',
           pointerEvents: 'none',
-          opacity: 0.06,
+          opacity: 0.055,
         }}
       >
         <img
           src={logoSrc}
           alt=""
           style={{
-            width: '50%',
+            width: '55%',
             filter: 'sepia(1) hue-rotate(-15deg) saturate(0.6)',
           }}
         />
       </div>
 
       {/* ═══════════════════════════════════════════════════
-          HEADER — Logo + Brand
+          HEADER — Logo + Brand + Receipt line
       ═══════════════════════════════════════════════════ */}
       <div
         style={{
@@ -120,14 +121,13 @@ export function ReceiptFullPage({
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
-          marginBottom: '10mm',
         }}
       >
         <img
           src={logoSrc}
           alt="Vickkyaku"
           style={{
-            height: '18mm',
+            height: '14mm',
             width: 'auto',
             objectFit: 'contain',
             filter: 'sepia(0.9) saturate(1.6) hue-rotate(-15deg) brightness(0.7)',
@@ -136,10 +136,11 @@ export function ReceiptFullPage({
 
         <h1
           style={{
-            marginTop: '5mm',
-            fontSize: '28pt',
+            marginTop: '3mm',
+            marginBottom: 0,
+            fontSize: '24pt',
             fontWeight: 900,
-            letterSpacing: '0.02em',
+            letterSpacing: '0.03em',
             color: T.brand,
             lineHeight: 1,
             fontFamily: '"Georgia", "Times New Roman", serif',
@@ -147,174 +148,108 @@ export function ReceiptFullPage({
         >
           VICKKYAKU.COM
         </h1>
+
+        <p
+          style={{
+            marginTop: '4mm',
+            marginBottom: 0,
+            fontSize: '11pt',
+            color: T.text,
+            fontWeight: 500,
+            letterSpacing: '0.01em',
+          }}
+        >
+          Receipt No: <b style={{ fontWeight: 800 }}>#{receiptNo}</b>
+          <span style={{ margin: '0 8px', color: T.border }}>|</span>
+          Date: <b style={{ fontWeight: 800 }}>{dateStr}</b>
+        </p>
       </div>
 
       {/* ═══════════════════════════════════════════════════
-          DETAILS TABLE
+          BREAK LINE — TOP
       ═══════════════════════════════════════════════════ */}
       <div
         style={{
           position: 'relative',
-          border: `1px solid ${T.border}`,
-          borderRadius: '2mm',
-          overflow: 'hidden',
-          background: 'rgba(255,255,255,0.35)',
+          margin: '7mm 0',
+          borderTop: `1.5px solid ${T.border}`,
         }}
-      >
-        {/* Header row */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '4mm 6mm',
-            borderBottom: `1px solid ${T.borderLight}`,
-            fontSize: '12pt',
-          }}
-        >
-          <div>
-            <span style={{ fontWeight: 700 }}>Receipt No: </span>
-            <span style={{ fontWeight: 900, letterSpacing: '0.02em' }}>
-              #{receiptNo}
-            </span>
-          </div>
-          <div>
-            <span style={{ fontWeight: 700 }}>Date: </span>
-            <span style={{ fontWeight: 600 }}>{dateStr}</span>
-          </div>
-        </div>
-
-        {/* Column headers */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 60px 1fr 1fr',
-            padding: '4mm 6mm',
-            borderBottom: `1px solid ${T.borderLight}`,
-            fontSize: '12pt',
-            fontWeight: 800,
-          }}
-        >
-          <span>Item</span>
-          <span style={{ textAlign: 'center' }}>Qty</span>
-          <span style={{ textAlign: 'right' }}>Unit Price</span>
-          <span style={{ textAlign: 'right' }}>Total</span>
-        </div>
-
-        {/* Item row */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 60px 1fr 1fr',
-            padding: '5mm 6mm',
-            fontSize: '12pt',
-            borderBottom: `1px solid ${T.borderLight}`,
-          }}
-        >
-          <span style={{ fontWeight: 600 }}>{productTitle}</span>
-          <span style={{ textAlign: 'center', fontWeight: 600 }}>{qty}</span>
-          <span style={{ textAlign: 'right', fontWeight: 600 }}>
-            {formatNaira(unit)}
-          </span>
-          <span style={{ textAlign: 'right', fontWeight: 800 }}>
-            {formatNaira(unit * qty)}
-          </span>
-        </div>
-
-        {/* Subtotal */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 60px 1fr 1fr',
-            padding: '4mm 6mm',
-            borderBottom: `1px solid ${T.borderLight}`,
-            fontSize: '12pt',
-          }}
-        >
-          <span />
-          <span />
-          <span style={{ textAlign: 'right', fontWeight: 700 }}>Subtotal:</span>
-          <span style={{ textAlign: 'right', fontWeight: 800 }}>
-            {formatNaira(grandTotal)}
-          </span>
-        </div>
-
-        {/* Total */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 60px 1fr 1fr',
-            padding: '5mm 6mm',
-            background: 'rgba(139,115,85,0.08)',
-            fontSize: '14pt',
-          }}
-        >
-          <span />
-          <span />
-          <span
-            style={{
-              textAlign: 'right',
-              fontWeight: 900,
-              letterSpacing: '0.02em',
-            }}
-          >
-            Total:
-          </span>
-          <span style={{ textAlign: 'right', fontWeight: 900 }}>
-            {formatNaira(grandTotal)}
-          </span>
-        </div>
-      </div>
+      />
 
       {/* ═══════════════════════════════════════════════════
-          CASHBACK & QR SECTION
-          flex-1 makes this take remaining space and center content
+          PRODUCT — name + price
       ═══════════════════════════════════════════════════ */}
       <div
         style={{
           position: 'relative',
-          marginTop: '10mm',
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
           textAlign: 'center',
+          marginBottom: '2mm',
         }}
       >
         <h2
           style={{
-            fontSize: '16pt',
-            fontWeight: 900,
-            letterSpacing: '0.02em',
-            color: T.text,
             margin: 0,
+            fontSize: '28pt',
+            fontWeight: 800,
+            color: T.brand,
+            fontFamily: '"Georgia", "Times New Roman", serif',
+            lineHeight: 1.1,
+            letterSpacing: '0.005em',
           }}
         >
-          Cashback &amp; QR
+          {productTitle}
         </h2>
 
         <p
           style={{
-            marginTop: '3mm',
-            fontSize: '13pt',
-            fontWeight: 800,
+            marginTop: '5mm',
+            marginBottom: 0,
+            fontSize: '26pt',
+            fontWeight: 900,
             color: T.text,
-            lineHeight: 1.3,
+            letterSpacing: '-0.01em',
+            lineHeight: 1,
           }}
         >
-          Congratulations! Scan to Claim{' '}
-          <span style={{ color: T.brand }}>
-            ₦{Number(cashbackAmount).toFixed(2)}
-          </span>{' '}
-          Cashback
+          {formatNaira(grandTotal)}
         </p>
 
-        {/* QR code */}
+        {qty > 1 && (
+          <p
+            style={{
+              marginTop: '3mm',
+              marginBottom: 0,
+              fontSize: '11pt',
+              color: T.muted,
+              fontWeight: 500,
+            }}
+          >
+            {qty} × {formatNaira(unit)}
+          </p>
+        )}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════
+          QR + CASHBACK CALLOUT — grows to fill remaining space
+      ═══════════════════════════════════════════════════ */}
+      <div
+        style={{
+          position: 'relative',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8mm',
+          paddingTop: '6mm',
+          paddingBottom: '2mm',
+        }}
+      >
+        {/* ─── QR CODE — bigger ──────────────────────────── */}
         <div
           style={{
-            marginTop: '7mm',
             display: 'inline-block',
-            padding: '4mm',
+            padding: '5mm',
             background: '#FFFFFF',
             border: `1px solid ${T.borderLight}`,
             borderRadius: '2mm',
@@ -322,7 +257,7 @@ export function ReceiptFullPage({
         >
           <QRCodeCanvas
             value={qrData}
-            size={180}
+            size={320}
             level="M"
             bgColor="#FFFFFF"
             fgColor="#1A1A1A"
@@ -330,29 +265,68 @@ export function ReceiptFullPage({
           />
         </div>
 
+        {/* ─── Cashback callout ──────────────────────────── */}
+        <div style={{ textAlign: 'center' }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '17pt',
+              fontWeight: 900,
+              letterSpacing: '0.04em',
+              color: T.text,
+              textTransform: 'uppercase',
+            }}
+          >
+            Earn ₦{Number(cashbackAmount).toFixed(2)} Cashback
+          </p>
+          <p
+            style={{
+              marginTop: '3mm',
+              marginBottom: 0,
+              fontSize: '11pt',
+              fontWeight: 600,
+              letterSpacing: '0.16em',
+              color: T.muted,
+              textTransform: 'uppercase',
+            }}
+          >
+            Scan the code · Claim instantly
+          </p>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════
+          BREAK LINE — BOTTOM
+      ═══════════════════════════════════════════════════ */}
+      <div
+        style={{
+          position: 'relative',
+          margin: '6mm 0 4mm',
+          borderTop: `1.5px solid ${T.border}`,
+        }}
+      />
+
+      {/* ═══════════════════════════════════════════════════
+          FOOTER — small brand line
+      ═══════════════════════════════════════════════════ */}
+      <div
+        style={{
+          position: 'relative',
+          textAlign: 'center',
+          paddingBottom: '6mm',
+        }}
+      >
         <p
           style={{
-            marginTop: '6mm',
-            fontSize: '13pt',
-            fontWeight: 900,
-            letterSpacing: '0.05em',
-            color: T.text,
-            textTransform: 'uppercase',
-          }}
-        >
-          Earn ₦{Number(cashbackAmount).toFixed(2)} Cashback
-        </p>
-        <p
-          style={{
-            marginTop: '1.5mm',
-            fontSize: '10pt',
-            fontWeight: 600,
-            letterSpacing: '0.12em',
+            margin: 0,
+            fontSize: '9pt',
             color: T.muted,
+            letterSpacing: '0.12em',
             textTransform: 'uppercase',
+            fontWeight: 600,
           }}
         >
-          Scan the code · Claim instantly
+          vickkyaku.store
         </p>
       </div>
 
@@ -364,8 +338,8 @@ export function ReceiptFullPage({
         style={{
           position: 'absolute',
           right: '8mm',
-          bottom: '8mm',
-          width: '22mm',
+          bottom: '6mm',
+          width: '18mm',
           opacity: 0.1,
           pointerEvents: 'none',
         }}
