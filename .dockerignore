@@ -1,11 +1,36 @@
+# ─── Build artifacts ───────────────────────────────────
 node_modules
 dist
+
+# ─── Environment ───────────────────────────────────────
 .env
 .env.*
+!.env.example
+
+# ─── Git / editors ────────────────────────────────────
 .git
+.gitignore
 .vscode
 .idea
 .DS_Store
+*.swp
+
+# ─── Logs ──────────────────────────────────────────────
 *.log
+npm-debug.log*
+
+# ─── Docs ──────────────────────────────────────────────
 README.md
-Dockerfile
+LICENSE
+
+# ─── Coolify / CI cruft ───────────────────────────────
+.coolify
+.github
+
+# ═══════════════════════════════════════════════════════
+# EXPLICIT INCLUSIONS — these MUST be in the image
+# The `!` prefix forces inclusion even if a broader rule above
+# would have excluded them.
+# ═══════════════════════════════════════════════════════
+!nginx.conf
+!htpasswd

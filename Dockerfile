@@ -4,8 +4,8 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Give Node a bigger heap during build.
-# Vite transforming ~1700 modules peaks at 2-3 GB; default is 2 GB.
+# Bigger heap for Vite transform. Default 2 GB cap is what
+# caused the OOM-killed builds on Coolify.
 ENV NODE_OPTIONS=--max-old-space-size=4096
 ENV CI=true
 
@@ -20,9 +20,23 @@ RUN npm run build
 # ═══════════════════════════════════════════════════════════
 FROM nginx:alpine
 
+# Remove the base image's default config so ours is authoritative.
+# Without this, both default.conf (base) and our copy land in
+# /etc/nginx/conf.d/ — nginx loads them both and things collide.
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+# App assets from the build stage
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY htpasswd   /etc/nginx/.htpasswd
+
+# Our nginx config
+COPY nginx.conf /etc/nginx/conf.d/app.conf
+
+# Basic-auth password file
+COPY htpasswd /etc/nginx/.htpasswd
+
+# Ensure nginx's worker user can read the htpasswd file.
+# Runs as uid 101 (nginx) inside nginx:alpine.
+RUN chmod 0644 /etc/nginx/.htpasswd
 
 EXPOSE 80
 
