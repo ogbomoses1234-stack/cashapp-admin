@@ -2,8 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 export default defineConfig({
+    optimizeDeps: {
+        force: true,
+        include: ['react', 'react-dom', 'react/jsx-runtime', 'zustand'],
+    },
     plugins: [react()],
     resolve: {
+        dedupe: ['react', 'react-dom', 'react-router-dom'],
         alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
     },
     server: {
@@ -26,7 +31,6 @@ export default defineConfig({
         outDir: 'dist',
         sourcemap: false,
         target: 'es2020',
-        allowedHosts: ['.trycloudflare.com'],
         rollupOptions: {
             output: {
                 manualChunks: {

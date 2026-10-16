@@ -215,6 +215,18 @@ export interface AdminSettings {
   sessionTtlMinutes: number;
 }
 
+/* ─── Admin notification preferences ───────────────────── */
+export interface NotificationPreferences {
+  /** Send an email when a customer places an order */
+  order: boolean;
+  /** Send an email when a customer submits a special-order package */
+  package: boolean;
+  /** Send an email when a customer requests a withdrawal */
+  withdrawal: boolean;
+  /** Destination address for all admin alerts */
+  email: string;
+}
+
 /* ─── API envelope ──────────────────────────────────────── */
 export interface ApiSuccess<T> {
   success: true;
