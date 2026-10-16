@@ -1,12 +1,23 @@
+# ═══════════════════════════════════════════════════════════
+# BUILD STAGE
+# ═══════════════════════════════════════════════════════════
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Give Node a bigger heap during build.
+# Vite transforming ~1700 modules peaks at 2-3 GB; default is 2 GB.
+ENV NODE_OPTIONS=--max-old-space-size=4096
+ENV CI=true
+
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund
 
 COPY . .
 RUN npm run build
 
+# ═══════════════════════════════════════════════════════════
+# RUNTIME STAGE
+# ═══════════════════════════════════════════════════════════
 FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
